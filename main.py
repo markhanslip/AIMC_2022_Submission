@@ -31,7 +31,7 @@ def run_process(opt):
     proc1.compute_mel_specs_GPU()
     proc1.cleanup()
 
-    proc2 = EDP(name='not_playing', in_file='./silence.wav')
+    proc2 = EDP(name='not_playing', in_file=opt.silence)
     proc2.make_dirs()
     proc2.resample_audio()
     proc2.data_augmentation()
@@ -40,7 +40,7 @@ def run_process(opt):
     proc2.compute_mel_specs_GPU()
     proc2.cleanup()
 
-    proc3 = SDP(name='solo1', in_file='./solo1.wav')
+    proc3 = SDP(name='solo1', in_file=opt.solo1)
     proc3.make_dirs()
     proc3.resample_audio()
     proc3.chunk_by_phrase()
@@ -51,7 +51,7 @@ def run_process(opt):
     proc3.compute_CQTs_GPU()
     proc3.cleanup()
 
-    proc4 = SDP(name='solo2', in_file='./solo2.wav')
+    proc4 = SDP(name='solo2', in_file=opt.solo2)
     proc4.make_dirs()
     proc4.resample_audio()
     proc4.chunk_by_phrase()
@@ -169,5 +169,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--solo1', type=str, help='path to recording of first solo in wav format')
     parser.add_argument('--solo2', type=str, help='path to recording of second solo in wav format')
+    parser.add_argument('--silence', type=str, help='path to recording of environmental sound, preferably the room you are in')
     opt = parser.parse_args()
     run_process(opt)
