@@ -14,7 +14,6 @@ import parselmouth
 import torch
 import torchaudio
 from nnAudio import features
-from rich import print
 
 class SoloDataProcessing:
 
