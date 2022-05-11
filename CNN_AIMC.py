@@ -9,7 +9,7 @@ import torch.backends.cudnn as cudnn # necessary?
 import torch.nn.functional as F # this not necessary if importing nn - just need to change code to nn.functional() instead of F()
 from torch.autograd import Variable
 import os
-import skimage.io as io # can probably do this with PIL (was just saving the spectro in inference class)
+import skimage.io as io 
 import librosa
 import PIL
 import scipy.io.wavfile as wav
@@ -18,7 +18,6 @@ import torchaudio
 from nnAudio import features
 import soundfile as sf
 from torchsummary import summary
-from rich import print
 
 class CNN(nn.Module):
 
