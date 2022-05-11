@@ -4,7 +4,6 @@ from numpy import inf
 import statistics
 import librosa
 import soundfile as sf
-from rich import print
 
 class OnsetsFilter:
 
