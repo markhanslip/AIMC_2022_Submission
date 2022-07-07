@@ -17,78 +17,76 @@ def run_process(opt):
 
     ################## DATA PREPROCESSING ####################
 
-    # combine both sax recs for env/sax discrimination:
+    solo1 = AudioSegment.from_wav(opt.solo1)
+    solo2 = AudioSegment.from_wav(opt.solo2)
+    combined = solo1.append(solo2)
+    combined.export('./combined.wav', format='wav')
 
-    # solo1 = AudioSegment.from_wav(opt.solo1)
-    # solo2 = AudioSegment.from_wav(opt.solo2)
-    # combined = solo1.append(solo2)
-    # combined.export('./combined.wav', format='wav')
-    #
-    # proc1 = EDP(name='playing', in_file='./combined.wav')
-    # proc1.make_dirs()
-    # proc1.resample_audio()
-    # proc1.data_augmentation()
-    # proc1.chunk_train_audio()
-    # if torch.cuda.is_available():
-    #     proc1.get_mel_layer()
-    #     proc1.compute_mel_specs_GPU()
-    # else:
-    #     proc1.compute_mel_specs()
-    # proc1.cleanup()
-    #
-    # proc2 = EDP(name='not_playing', in_file=opt.silence)
-    # proc2.make_dirs()
-    # proc2.resample_audio()
-    # proc2.data_augmentation()
-    # proc2.chunk_train_audio()
-    # if torch.cuda.is_available():
-    #     proc2.get_mel_layer()
-    #     proc2.compute_mel_specs_GPU()
-    # else:
-    #     proc2.compute_mel_specs()
-    # proc2.cleanup()
-    #
-    # proc3 = SDP(name='solo1', in_file=opt.solo1)
-    # proc3.make_dirs()
-    # proc3.resample_audio()
-    # proc3.chunk_by_phrase()
-    # proc3.data_augmentation()
-    # proc3.chunk_train_audio()
-    # if torch.cuda.is_available():
-    #     proc3.get_CQT_layer()
-    #     proc3.compute_CQTs_GPU()
-    # else:
-    #     proc3.compute_CQTs()
-    # proc3.cleanup()
-    #
-    # proc4 = SDP(name='solo2', in_file=opt.solo2)
-    # proc4.make_dirs()
-    # proc4.resample_audio()
-    # proc4.chunk_by_phrase()
-    # proc4.data_augmentation()
-    # proc4.chunk_train_audio()
-    # if torch.cuda.is_available():
-    #     proc4.get_CQT_layer()
-    #     proc4.compute_CQTs_GPU()
-    # else:
-    #     proc4.compute_CQTs()
-    # proc4.cleanup()
-    #
-    # # ###################### MODEL TRAINING ###################
-    #
-    # envtrain = CNN.Trainer(data_path='./env_train_data/')
-    # envtrain.calculate_mean_std()
-    # envtrain.load_data()
-    # envtrain.build_model()
-    # envtrain.train(epochs=15)
-    # envtrain.save_model(model_path='./env_model.pth')
-    #
-    # saxtrain = CNN.Trainer(data_path='./sax_train_data/')
-    # saxtrain.calculate_mean_std()
-    # saxtrain.load_data()
-    # saxtrain.build_model()
-    # saxtrain.train(epochs=15)
-    # saxtrain.save_model(model_path='./solo_model.pth')
+    proc1 = EDP(name='playing', in_file='./combined.wav')
+    proc1.make_dirs()
+    proc1.resample_audio()
+    proc1.data_augmentation()
+    proc1.chunk_train_audio()
+    if torch.cuda.is_available():
+        proc1.get_mel_layer()
+        proc1.compute_mel_specs_GPU()
+    else:
+        proc1.compute_mel_specs()
+    proc1.cleanup()
+
+    proc2 = EDP(name='not_playing', in_file=opt.silence)
+    proc2.make_dirs()
+    proc2.resample_audio()
+    proc2.data_augmentation()
+    proc2.chunk_train_audio()
+    if torch.cuda.is_available():
+        proc2.get_mel_layer()
+        proc2.compute_mel_specs_GPU()
+    else:
+        proc2.compute_mel_specs()
+    proc2.cleanup()
+
+    proc3 = SDP(name='solo1', in_file=opt.solo1)
+    proc3.make_dirs()
+    proc3.resample_audio()
+    proc3.chunk_by_phrase()
+    proc3.data_augmentation()
+    proc3.chunk_train_audio()
+    if torch.cuda.is_available():
+        proc3.get_CQT_layer()
+        proc3.compute_CQTs_GPU()
+    else:
+        proc3.compute_CQTs()
+    proc3.cleanup()
+
+    proc4 = SDP(name='solo2', in_file=opt.solo2)
+    proc4.make_dirs()
+    proc4.resample_audio()
+    proc4.chunk_by_phrase()
+    proc4.data_augmentation()
+    proc4.chunk_train_audio()
+    if torch.cuda.is_available():
+        proc4.get_CQT_layer()
+        proc4.compute_CQTs_GPU()
+    else:
+        proc4.compute_CQTs()
+    proc4.cleanup()
+
+    # ###################### MODEL TRAINING ###################
+
+    envtrain = CNN.Trainer(data_path='./env_train_data/')
+    envtrain.calculate_mean_std()
+    envtrain.load_data()
+    envtrain.build_model()
+    envtrain.train(epochs=15)
+    envtrain.save_model(model_path='./env_model.pth')
+
+    saxtrain = CNN.Trainer(data_path='./sax_train_data/')
+    saxtrain.calculate_mean_std()
+    saxtrain.load_data()
+    saxtrain.build_model()
+    saxtrain.train(epochs=15)
+    saxtrain.save_model(model_path='./solo_model.pth')
 
     ####################### LOAD MODELS FOR INFERENCE #########################
 
