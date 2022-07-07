@@ -22,7 +22,7 @@ install dependencies:
 ```
 pip install -r requirements.txt
 ```
-Once you're all set up, the main.py script runs the program. It takes 3 audio files - two of your playing, one just of the sound of your environment. These are processed into datasets, two classifiers are trained, and you then enter an interactive loop. 
+Once you're all set up, the main.py script runs the program. It takes 3 audio files - two of your playing, one just of the sound of your environment. These are processed into datasets, two classifiers are trained on them, and you then enter an interactive loop. 
 ```
 python main.py --solo1 path/to/wavfile.wav --solo2 path/to/another/wavfile.wav --silence path/to/a/third/wavfile.wav 
 ```
