@@ -4,7 +4,7 @@ Code base for music work submission to AIMC 2022
 
 Tested on Ubuntu 20.04 
 
-This code is quite specific to my PhD project and was intended more for my own usage and for others to hack at and steal from. But should you feel compelled to run it in full, I'd suggest firstly creating an Anaconda environment for the dependencies. 
+This code is quite specific to my PhD project. It was intended more for my own usage, and for others to hack at and steal from. But should you feel compelled to run it in full, I'd suggest firstly creating an Anaconda environment for the dependencies. 
 
 Install Anaconda: https://docs.anaconda.com/anaconda/install/
 
