@@ -1,0 +1,14 @@
+numpy
+soundfile
+librosa
+torch
+torchaudio
+torchvision
+torchsummary
+nnaudio
+imageio 
+simpleaudio
+pysox
+pyaudio
+pydub
+praat-parselmouth
