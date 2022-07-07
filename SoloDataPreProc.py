@@ -1,11 +1,7 @@
-#!/usr/bin/env python
-
 import os
 import numpy as np
 import librosa
-import scipy.io.wavfile as wav
 import soundfile as sf
-import skimage.io as io
 import sox
 from shutil import rmtree, move
 from pydub import AudioSegment, effects
@@ -13,6 +9,7 @@ from numpy import inf
 import parselmouth
 import torch
 import torchaudio
+import imageio as io
 from nnAudio import features
 
 class SoloDataProcessing:
@@ -50,26 +47,14 @@ class SoloDataProcessing:
         print('created directories')
 
     def resample_audio(self):
-        sr, data = wav.read(self.in_file)
-        data = data.astype(np.float64)
+        data, sr = sf.read(self.in_file)
         if sr != 22050:
-            data = librosa.resample(data, sr, self.sr, 'polyphase')
-            wav.write(self.in_file, self.sr, data)
+            data = librosa.resample(data, orig_sr=sr, target_sr=self.sr)
+            sf.write(self.in_file, samplerate=self.sr, data=data)
             print('resampled source audio')
         else:
             print('data is already at desired sr of 22050')
             pass
-
-    def normalize(self):
-        # safeguard
-        sr, data = wav.read(self.in_file)
-        data = data.astype(np.int16)
-        wav.write(self.in_file, self.sr, data)
-
-        rawsound = AudioSegment.from_file(self.in_file, "wav")
-        normalizedsound = effects.normalize(rawsound)
-        normalizedsound.export(self.in_file, format="wav")
-        print('normalized audio')
 
     def chunk_by_phrase(self):
 
@@ -108,42 +93,7 @@ class SoloDataProcessing:
             y, sr = sf.read(os.path.join(self.phrase_dir, wavfile))
             y = y / np.max(np.abs(y))
             sf.write(os.path.join(self.phrase_dir, wavfile), samplerate=sr, data=y)
-
-
-            # rawsound = AudioSegment.from_file(wavfile, "wav")
-            # normalizedsound = effects.normalize(rawsound)
-            # normalizedsound.export(os.path.join(self.phrase_dir, wavfile), format="wav")
         print('normalized phrases')
-
-    def truncate_silence(self):
-        startPos = 0
-        thresh = 15 # needs to be high bc audio has been normalized
-        snd_array = []
-        slnt_array = []
-        sr, array = wav.read(self.in_file)
-        chunk_len = int(sr/5)
-        endPos=int(sr/5)
-
-        try:
-
-            for i in range(0, (len(array)-chunk_len), chunk_len): # I know this is horrible but the func still runs fast
-                if np.mean(np.abs(array[startPos:endPos])) > thresh:
-                    snd_array.append(array[startPos:endPos])
-                if np.mean(np.abs(array[startPos:endPos])) < thresh:
-                    slnt_array.append(array[startPos:endPos])
-                startPos+=chunk_len
-                endPos+=chunk_len
-
-            snd_array = np.concatenate(snd_array).ravel()
-            wav.write(self.in_file, sr, snd_array)
-            print('removed silences')
-
-            slnt_array = np.concatenate(slnt_array).ravel()
-            wav.write(self.silent_file, sr, slnt_array)
-            print('wrote silence file')
-
-        except ValueError as e:
-            pass
 
     def data_augmentation(self): # data augmentation through pitch shift
         tfm1 = sox.Transformer()
@@ -156,14 +106,14 @@ class SoloDataProcessing:
         combined = []
 
         for file in os.listdir(self.aug_dir):
-            sr, sound = wav.read(os.path.join(self.aug_dir, file))
+            sound, sr = sf.read(os.path.join(self.aug_dir, file))
             combined.append(sound)
-        sr, sound2 = wav.read(self.in_file)
+        sound2, sr = sf.read(self.in_file)
         combined.append(sound2)
 
         combined=np.hstack(combined)
 
-        wav.write(self.in_file, rate=sr, data=combined.astype(np.int16)) # not sure why i converted to int16 here
+        sf.write(self.in_file, samplerate=sr, data=combined)
         print('augmented data')
 
     def chunk_train_audio(self):
@@ -171,14 +121,13 @@ class SoloDataProcessing:
         startpos = 0
         endpos = 32767
         count=0
-        sr, data = wav.read(self.in_file)
+        data, sr = sf.read(self.in_file)
         for i, n in enumerate(data):
             if i % chunk_len == 0:
                 if len(data) - startpos >= 32768:
                     count+=1
                     chunk = data[startpos:endpos]
-                    chunk = chunk/np.max(np.abs(chunk))
-                    wav.write(os.path.join(self.chunk_dir,'{}.wav'.format(str(count).zfill(6))), sr, chunk)
+                    sf.write(os.path.join(self.chunk_dir,'{}.wav'.format(str(count).zfill(6))), samplerate=sr, data=chunk)
                     startpos = (startpos+chunk_len-1)
                     endpos = (endpos+(chunk_len-1))
                 else:
@@ -200,7 +149,7 @@ class SoloDataProcessing:
 
     def get_CQT_layer(self):
 
-        sr, y = wav.read(self.in_file)
+        y, sr = sf.read(self.in_file)
         y = torch.FloatTensor(y)
         self.cqt = features.CQT(hop_length=512, fmin=64, n_bins=64, bins_per_octave=12)
         return self.cqt
@@ -208,7 +157,7 @@ class SoloDataProcessing:
     def compute_CQTs_GPU(self):
 
         for chunk in os.listdir(self.chunk_dir):
-            sr, y = wav.read(os.path.join(self.chunk_dir, chunk))
+            y, sr = sf.read(os.path.join(self.chunk_dir, chunk))
             y = torch.FloatTensor(y)
             cqt_spec = self.cqt(y)
             cqt_spec = torch.abs(cqt_spec)

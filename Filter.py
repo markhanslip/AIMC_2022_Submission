@@ -19,21 +19,21 @@ class OnsetsFilter:
     def get_freqs(self):
 
         self.audio_data = parselmouth.Sound(self.in_file)
-        print('audio loaded')
+        # print('audio loaded')
 
         self.pitches = self.audio_data.to_pitch_ac(time_step=0.01, pitch_floor=50.0, pitch_ceiling=1200.0) # check this doesn't need a sr arg
         self.pitches = self.pitches.selected_array['frequency']
         self.pitches[self.pitches==0] = np.nan
         self.pitches = list(self.pitches)
         self.pitches = np.nan_to_num(self.pitches)
-        print('extracted freqs')
+        # print('extracted freqs')
 
     def freqs_to_MIDI(self):
 
         self.pitches = 12*np.log2(self.pitches/440)+69
         self.pitches[self.pitches == -inf] = 0
         self.pitches = np.around(self.pitches, decimals=1)
-        print('converted freqs to MIDI')
+        # print('converted freqs to MIDI')
 
     def get_onsets(self):
 
@@ -53,14 +53,34 @@ class OnsetsFilter:
                 self.onsets.append(temp_onsets[i])
             if temp_onsets[i] == 1 and temp_onsets[i+1] == 1:
                 self.onsets.append(0)
-        print(len(self.onsets), len(self.pitches))
+        # print(len(self.onsets), len(self.pitches))
         self.onsets = np.insert(self.onsets, 0, 0)
         self.pitches = self.onsets * self.pitches[:-1]
         self.pitches[self.pitches > 80.0] == 0
-        print(self.pitches)
-        print(max(self.pitches))
+        # print(self.pitches)
+        # print(max(self.pitches))
         nz = np.flatnonzero(self.pitches)
         if np.count_nonzero(self.pitches) >= self.threshold: # 2 is number of meaningful freqs - set higher to make filter more aggressive
+            return 1
+        else:
+            return 0
+
+class AmpFilter:
+
+    def __init__(self, in_file, threshold=35.0):
+        self.in_file = in_file
+        self.threshold = threshold
+        self.audio_data = parselmouth.Sound(self.in_file)
+        print('audio loaded')
+
+    def get_mean_amp(self):
+
+        self.amplitudes = self.audio_data.to_intensity(time_step=0.01)
+        self.amplitudes = self.amplitudes.values
+        self.amplitudes = np.ndarray.tolist(self.amplitudes)
+        self.amplitudes = self.amplitudes[0]
+        # print(self.amplitudes)
+        if statistics.mean(self.amplitudes) > self.threshold:
             return 1
         else:
             return 0

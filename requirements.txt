@@ -1,5 +1,7 @@
 torch
+torchvision
 torchaudio
+torchsummary
 parselmouth
 librosa
 torchsummary
@@ -7,4 +9,7 @@ scikit-image
 pydub
 simpleaudio
 nnaudio
-
+numpy
+imageio
+pysox
+pyaudio

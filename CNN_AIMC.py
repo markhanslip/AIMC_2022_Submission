@@ -1,18 +1,12 @@
-#!/usr/bin/env python
-
 import numpy as np
 import torch
 from torch import nn, optim
 from torchvision import transforms, datasets
-import torch.nn.parallel # this not necessary if importing nn
-import torch.backends.cudnn as cudnn # necessary?
-import torch.nn.functional as F # this not necessary if importing nn - just need to change code to nn.functional() instead of F()
 from torch.autograd import Variable
 import os
-import skimage.io as io 
 import librosa
-import PIL
-import scipy.io.wavfile as wav
+from PIL import Image
+import imageio as io
 from shutil import move
 import torchaudio
 from nnAudio import features
@@ -53,7 +47,7 @@ class CNN(nn.Module):
         x = self.conv2(x)
         x = x.view(x.size(0), -1)
         x = self.fully_connected(x)
-        return F.softmax(x, dim=1)
+        return nn.functional.softmax(x, dim=1)
 
 class Trainer:
 
@@ -190,7 +184,7 @@ class Trainer:
                 labels = labels.to(self.device)
                 loss = self.loss_fn(output, labels)
                 valid_loss += loss.data.item()
-                correct = torch.eq(torch.max(F.softmax(output, dim=1), dim=1)[1], labels).view(-1)
+                correct = torch.eq(torch.max(nn.functional.softmax(output, dim=1), dim=1)[1], labels).view(-1)
                 num_correct += torch.sum(correct).item()
                 num_examples += correct.shape[0]
 
@@ -258,7 +252,7 @@ class Inference: # think this should inherit from Trainer
 
         if self.spec_type == 'cqt':
 
-            sr, y = wav.read(self.rec_path)
+            y, sr = sf.read(self.rec_path)
             if len(y) > 32768:
                 y = y[:32767]
             y = y.astype(np.float64)
@@ -269,7 +263,7 @@ class Inference: # think this should inherit from Trainer
 
         elif self.spec_type == 'mel':
 
-            sr, y = wav.read(self.rec_path)
+            y, sr = sf.read(self.rec_path)
             if len(y) > 32768:
                 y = y[:32767]
             y = y.astype(np.float64)
@@ -281,13 +275,13 @@ class Inference: # think this should inherit from Trainer
     def get_layer(self, in_file):
 
         if self.spec_type == 'cqt':
-            sr, y = wav.read(in_file)
+            y, sr = sf.read(in_file)
             y = torch.FloatTensor(y)
             self.cqt = features.CQT(hop_length=512, fmin=64, n_bins=64, bins_per_octave=12)
             return self.cqt
 
         elif self.spec_type == 'mel':
-            sr, y = wav.read(in_file)
+            y, sr = sf.read(in_file)
             y = torch.FloatTensor(y)
             self.mel = features.MelSpectrogram(hop_length=512, n_mels=64)
             return self.mel
@@ -313,6 +307,7 @@ class Inference: # think this should inherit from Trainer
             cqt_spec = cqt_spec.reshape((cqt_spec.shape[1], cqt_spec.shape[2]))
             io.imsave(self.spec_path, cqt_spec)
 
+
         elif self.spec_type == 'mel':
 
             if self.mel == None:
@@ -329,21 +324,11 @@ class Inference: # think this should inherit from Trainer
             mel_spec = torchaudio.transforms.AmplitudeToDB(top_db=80)(mel_spec)
             mel_spec = mel_spec.cpu().detach().numpy()
             mel_spec = mel_spec.reshape((mel_spec.shape[1], mel_spec.shape[2]))
-            io.imsave(self.spec_path, mel_spec)
-
-    def compute_tempog(self):
-
-        sr, y = wav.read(self.rec_path)
-        if len(y) > 32768:
-            y = y[:32767]
-        y = y.astype(np.float64)
-        oenv = librosa.onset.onset_strength(y=y, sr=sr, hop_length=512)
-        tempogram = librosa.feature.tempogram(onset_envelope=oenv, hop_length=512, win_length=64, sr=sr)
-        io.imsave(self.spec_path, tempogram)
+            io.imsave(self.spec_path,  mel_spec)
 
     def infer_class(self):
 
-        image = PIL.Image.open(self.spec_path)
+        image = Image.open(self.spec_path)
         image = image.convert('RGB')
         image_tensor = transforms.Compose([
             transforms.RandomResizedCrop(64),
