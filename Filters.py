@@ -2,8 +2,6 @@ import parselmouth
 import numpy as np
 from numpy import inf
 import statistics
-import librosa
-import soundfile as sf
 
 class OnsetsFilter:
 

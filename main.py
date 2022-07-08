@@ -1,8 +1,7 @@
-from EnvDataPreProc import EnvDataProcessing as EDP
-from SoloDataPreProc import SoloDataProcessing as SDP
+from DatasetTools import AudioDataProcessing as ADP
 import Recorder
-import CNN_AIMC as CNN
-from Filter import OnsetsFilter, AmpFilter
+import MLClasses as CNN
+from Filters import OnsetsFilter, AmpFilter
 import time
 import random
 import os
@@ -22,7 +21,7 @@ def run_process(opt):
     combined = solo1.append(solo2)
     combined.export('./combined.wav', format='wav')
 
-    proc1 = EDP(name='playing', in_file='./combined.wav')
+    proc1 = ADP(name='playing', in_file='./combined.wav', train_dir="./env_train_data")
     proc1.make_dirs()
     proc1.resample_audio()
     proc1.data_augmentation()
@@ -34,7 +33,7 @@ def run_process(opt):
         proc1.compute_mel_specs()
     proc1.cleanup()
 
-    proc2 = EDP(name='not_playing', in_file=opt.silence)
+    proc2 = ADP(name='not_playing', in_file=opt.silence, train_dir="./env_train_data")
     proc2.make_dirs()
     proc2.resample_audio()
     proc2.data_augmentation()
@@ -46,7 +45,7 @@ def run_process(opt):
         proc2.compute_mel_specs()
     proc2.cleanup()
 
-    proc3 = SDP(name='solo1', in_file=opt.solo1)
+    proc3 = ADP(name='solo1', in_file=opt.solo1, train_dir="./sax_train_data")
     proc3.make_dirs()
     proc3.resample_audio()
     proc3.chunk_by_phrase()
@@ -59,7 +58,7 @@ def run_process(opt):
         proc3.compute_CQTs()
     proc3.cleanup()
 
-    proc4 = SDP(name='solo2', in_file=opt.solo2)
+    proc4 = ADP(name='solo2', in_file=opt.solo2, train_dir="./sax_train_data")
     proc4.make_dirs()
     proc4.resample_audio()
     proc4.chunk_by_phrase()

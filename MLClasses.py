@@ -269,7 +269,7 @@ class Inference: # think this should inherit from Trainer
             y = y.astype(np.float64)
             mel = librosa.feature.melspectrogram(y,  sr=sr, hop_length=512, n_mels=64)
             mel_db = librosa.power_to_db(mel, ref=np.max)
-            io.imsave(self.spec_path, mel_db)
+            io.imsave(self.spec_path, cqt_db)
             print('computed spectro')
 
     def get_layer(self, in_file):
@@ -305,8 +305,9 @@ class Inference: # think this should inherit from Trainer
             cqt_spec = torchaudio.transforms.AmplitudeToDB(top_db=80)(cqt_spec)
             cqt_spec = cqt_spec.cpu().detach().numpy()
             cqt_spec = cqt_spec.reshape((cqt_spec.shape[1], cqt_spec.shape[2]))
-            io.imsave(self.spec_path, cqt_spec)
-
+            cqt_spec = Image.fromarray(cqt_spec)
+            cqt_spec = cqt_spec.convert("RGB")
+            cqt_spec.save(self.spec_path)
 
         elif self.spec_type == 'mel':
 
@@ -324,7 +325,21 @@ class Inference: # think this should inherit from Trainer
             mel_spec = torchaudio.transforms.AmplitudeToDB(top_db=80)(mel_spec)
             mel_spec = mel_spec.cpu().detach().numpy()
             mel_spec = mel_spec.reshape((mel_spec.shape[1], mel_spec.shape[2]))
-            io.imsave(self.spec_path,  mel_spec)
+            mel_spec = Image.fromarray(mel_spec)
+            mel_spec.save(self.spec_path)
+
+    def compute_tempog(self):
+
+        y, sr = sf.read(self.rec_path)
+        if len(y) > 32768:
+            y = y[:32767]
+        y = y.astype(np.float64)
+        oenv = librosa.onset.onset_strength(y=y, sr=sr, hop_length=512)
+        tempogram = librosa.feature.tempogram(onset_envelope=oenv, hop_length=512, win_length=64, sr=sr)
+        tempogram=Image.fromarray(tempogram)
+        tempogram=tempogram.convert("RGB")
+
+        tempogram.save(self.spec_path)
 
     def infer_class(self):
 
