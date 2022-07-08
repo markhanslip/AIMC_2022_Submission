@@ -21,7 +21,10 @@ def run_process(opt):
     combined = solo1.append(solo2)
     combined.export('./combined.wav', format='wav')
 
-    proc1 = ADP(name='playing', in_file='./combined.wav', train_dir="./env_train_data")
+    proc1 = ADP(name='playing',
+                in_file='./combined.wav',
+                train_dir="./env_train_data")
+
     proc1.make_dirs()
     proc1.resample_audio()
     proc1.data_augmentation()
@@ -33,7 +36,10 @@ def run_process(opt):
         proc1.compute_mel_specs()
     proc1.cleanup()
 
-    proc2 = ADP(name='not_playing', in_file=opt.silence, train_dir="./env_train_data")
+    proc2 = ADP(name='not_playing',
+                in_file=opt.silence,
+                train_dir="./env_train_data")
+
     proc2.make_dirs()
     proc2.resample_audio()
     proc2.data_augmentation()
@@ -45,7 +51,10 @@ def run_process(opt):
         proc2.compute_mel_specs()
     proc2.cleanup()
 
-    proc3 = ADP(name='solo1', in_file=opt.solo1, train_dir="./sax_train_data")
+    proc3 = ADP(name='solo1',
+                in_file=opt.solo1,
+                train_dir="./sax_train_data")
+
     proc3.make_dirs()
     proc3.resample_audio()
     proc3.chunk_by_phrase()
@@ -58,7 +67,10 @@ def run_process(opt):
         proc3.compute_CQTs()
     proc3.cleanup()
 
-    proc4 = ADP(name='solo2', in_file=opt.solo2, train_dir="./sax_train_data")
+    proc4 = ADP(name='solo2',
+                in_file=opt.solo2,
+                train_dir="./sax_train_data")
+
     proc4.make_dirs()
     proc4.resample_audio()
     proc4.chunk_by_phrase()
@@ -91,18 +103,26 @@ def run_process(opt):
 
     # load classifiers: #
 
-    infer_env = CNN.Inference(model_path = './env_model.pth', rec_path = './infer.wav', spec_path = './infer_env.jpg', spec_type='mel')
+    infer_env = CNN.Inference(model_path = './env_model.pth',
+                              rec_path = './infer.wav',
+                              spec_path = './infer_env.jpg',
+                              spec_type='mel')
     infer_env.load_model()
 
-    infer_solo = CNN.Inference(model_path = './solo_model.pth', rec_path = './infer.wav', spec_path = './infer_solo.jpg', spec_type='cqt')
+    infer_solo = CNN.Inference(model_path = './solo_model.pth',
+                               rec_path = './infer.wav',
+                               spec_path = './infer_solo.jpg',
+                               spec_type='cqt')
     infer_solo.load_model()
 
     ###################### PLAYBACK FUNC ######################### t
 
     def playback(predicted_class:str):
 
-        snd1 = AudioSegment.from_file(os.path.join('./{}_phrases'.format(predicted_class), random.choice(os.listdir('./{}_phrases'.format(predicted_class)))))
-        snd2 = AudioSegment.from_file(os.path.join('./{}_phrases'.format(predicted_class), random.choice(os.listdir('./{}_phrases'.format(predicted_class)))))
+        snd1 = AudioSegment.from_file(
+            os.path.join('./{}_phrases'.format(predicted_class), random.choice(os.listdir('./{}_phrases'.format(predicted_class)))))
+        snd2 = AudioSegment.from_file(
+            os.path.join('./{}_phrases'.format(predicted_class), random.choice(os.listdir('./{}_phrases'.format(predicted_class)))))
         combined = snd1.append(snd2, crossfade=50)
         combined = combined.fade_in(50).fade_out(50)
         _play_with_simpleaudio(combined)
@@ -182,9 +202,20 @@ def run_process(opt):
                     solo2_count = 0
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--solo1', type=str, help='path to recording of first solo in wav format')
-    parser.add_argument('--solo2', type=str, help='path to recording of second solo in wav format')
-    parser.add_argument('--silence', type=str, help='path to recording of environmental sound, preferably the room you are in')
+
+    parser.add_argument('--solo1',
+                        type=str,
+                        help='path to recording of first solo in wav format')
+
+    parser.add_argument('--solo2',
+                        type=str,
+                        help='path to recording of second solo in wav format')
+
+    parser.add_argument('--silence',
+                        type=str,
+                        help='path to recording of environmental sound, preferably the room you are in')
+
     opt = parser.parse_args()
     run_process(opt)
