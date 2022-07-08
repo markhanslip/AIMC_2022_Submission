@@ -328,19 +328,6 @@ class Inference: # think this should inherit from Trainer
             mel_spec = Image.fromarray(mel_spec)
             mel_spec.save(self.spec_path)
 
-    def compute_tempog(self):
-
-        y, sr = sf.read(self.rec_path)
-        if len(y) > 32768:
-            y = y[:32767]
-        y = y.astype(np.float64)
-        oenv = librosa.onset.onset_strength(y=y, sr=sr, hop_length=512)
-        tempogram = librosa.feature.tempogram(onset_envelope=oenv, hop_length=512, win_length=64, sr=sr)
-        tempogram=Image.fromarray(tempogram)
-        tempogram=tempogram.convert("RGB")
-
-        tempogram.save(self.spec_path)
-
     def infer_class(self):
 
         image = Image.open(self.spec_path)
